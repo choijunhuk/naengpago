@@ -1,0 +1,46 @@
+{
+  "detectedItems": [
+    {
+      "rawName": "eggs",
+      "normalizedNameKo": "달걀",
+      "category": "EGG_DAIRY",
+      "quantityType": "COUNTABLE",
+      "estimatedCount": 6,
+      "unit": "개",
+      "remainingLevel": null,
+      "packageInfo": {
+        "productName": null,
+        "brand": null,
+        "totalVolume": null,
+        "expirationDateText": null,
+        "barcodeVisible": false
+      },
+      "confidence": 0.91,
+      "boundingBox": { "x": 0.08, "y": 0.18, "width": 0.3, "height": 0.2 },
+      "reason": "달걀로 보이는 개별 물체 6개가 상단 선반에 보임"
+    },
+    {
+      "rawName": "milk carton",
+      "normalizedNameKo": "우유",
+      "category": "EGG_DAIRY",
+      "quantityType": "LEVEL",
+      "estimatedCount": null,
+      "unit": null,
+      "remainingLevel": "HIGH",
+      "packageInfo": {
+        "productName": "신선한 우유",
+        "brand": null,
+        "totalVolume": "900 mL",
+        "expirationDateText": null,
+        "barcodeVisible": false
+      },
+      "confidence": 0.86,
+      "boundingBox": { "x": 0.62, "y": 0.12, "width": 0.22, "height": 0.42 },
+      "reason": "우유 팩이 보이지만 개봉 여부와 정확한 잔량은 확인하기 어려움"
+    }
+  ],
+  "sceneType": "FRIDGE_INTERIOR",
+  "warnings": ["하단 서랍이 가려져 내부 재료는 확인하지 못함"],
+  "analysisVersion": "1.0"
+}
+

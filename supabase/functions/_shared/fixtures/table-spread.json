@@ -1,0 +1,46 @@
+{
+  "detectedItems": [
+    {
+      "rawName": "pork belly pack",
+      "normalizedNameKo": "삼겹살",
+      "category": "MEAT",
+      "quantityType": "COUNTABLE",
+      "estimatedCount": 1,
+      "unit": "팩",
+      "remainingLevel": null,
+      "packageInfo": {
+        "productName": null,
+        "brand": null,
+        "totalVolume": null,
+        "expirationDateText": null,
+        "barcodeVisible": false
+      },
+      "confidence": 0.82,
+      "boundingBox": { "x": 0.08, "y": 0.35, "width": 0.38, "height": 0.3 },
+      "reason": "포장된 삼겹살로 보이는 육류 한 팩"
+    },
+    {
+      "rawName": "green onion bundle",
+      "normalizedNameKo": "대파",
+      "category": "VEGETABLE",
+      "quantityType": "LEVEL",
+      "estimatedCount": null,
+      "unit": null,
+      "remainingLevel": null,
+      "packageInfo": {
+        "productName": null,
+        "brand": null,
+        "totalVolume": null,
+        "expirationDateText": null,
+        "barcodeVisible": false
+      },
+      "confidence": 0.77,
+      "boundingBox": { "x": 0.5, "y": 0.12, "width": 0.42, "height": 0.25 },
+      "reason": "대파 한 묶음으로 보이나 묶음의 정확한 양은 추정하지 않음"
+    }
+  ],
+  "sceneType": "TABLE",
+  "warnings": [],
+  "analysisVersion": "1.0"
+}
+

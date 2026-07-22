@@ -1,0 +1,27 @@
+{
+  "detectedItems": [
+    {
+      "rawName": "tofu package",
+      "normalizedNameKo": "두부",
+      "category": "PROCESSED",
+      "quantityType": "COUNTABLE",
+      "estimatedCount": 1,
+      "unit": "모",
+      "remainingLevel": null,
+      "packageInfo": {
+        "productName": "부침용 두부",
+        "brand": null,
+        "totalVolume": null,
+        "expirationDateText": "2026.07.29",
+        "barcodeVisible": true
+      },
+      "confidence": 0.95,
+      "boundingBox": { "x": 0.16, "y": 0.2, "width": 0.68, "height": 0.56 },
+      "reason": "포장 전면의 두부 제품명과 소비기한 문구가 선명하게 보임"
+    }
+  ],
+  "sceneType": "SINGLE_ITEM",
+  "warnings": [],
+  "analysisVersion": "1.0"
+}
+
