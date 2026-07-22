@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "냉파고",
+    "slug": "naengpago",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "naengpago",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.naengpago.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "식재료를 사진으로 등록하기 위해 카메라를 사용합니다.",
+        "NSPhotoLibraryUsageDescription": "식재료 사진을 선택하기 위해 사진 보관함을 사용합니다."
+      }
+    },
+    "android": {
+      "package": "app.naengpago.mobile",
+      "permissions": ["CAMERA", "POST_NOTIFICATIONS"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "식재료 사진을 선택하면 AI가 등록 후보를 만들어요.",
+          "cameraPermission": "식재료를 촬영하면 AI가 등록 후보를 만들어요."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "expiry-reminders"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
+
