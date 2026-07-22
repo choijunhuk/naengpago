@@ -1,0 +1,14 @@
+node_modules/
+coverage/
+.env
+.env.*
+!.env.example
+.expo/
+dist/
+web-build/
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+*.log
+.DS_Store
+
