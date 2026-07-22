@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  phase-zero:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -19,10 +19,13 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      # TODO(#마감): 샌드박스 밖에서 Expo lockfile을 갱신한 뒤 npm ci로 되돌린다.
+      - run: npm install --ignore-scripts
       - run: npm run typecheck
+      - run: npm run typecheck:app
       - run: npm run lint
       - run: npm test
+      - run: npm run export:web
       - run: npm run seed:validate
       - run: npm run seed:generate
       - name: Verify generated seed files are committed
@@ -36,4 +39,3 @@ jobs:
       - name: Stop local Supabase
         if: always()
         run: npx supabase stop --no-backup
-

@@ -1,7 +1,7 @@
 # 냉파고 아키텍처
 
 최종 갱신: 2026-07-22  
-현재 단계: 0단계 — 설계 기반
+현재 단계: mock-first MVP 통합 구현
 
 ## 제품 경계
 
@@ -23,8 +23,12 @@ Expo App
 
 클라이언트는 LLM 제공자를 직접 호출하지 않는다. `AI_MODE`의 최종 결정권은 Edge Function 환경변수에 있다.
 
-## 현재 구현된 기반
+## 현재 구현된 범위
 
+- Expo SDK 57 + Expo Router 21개 라우트, NativeWind 디자인 시스템, 다크 모드
+- Zustand/AsyncStorage 기반 데모 인증·재고·분석 검토·추천·조리 차감·장보기 흐름
+- TanStack Query 앱 활성 상태 연결, SecureStore Supabase Auth 어댑터
+- 이미지 리사이즈/압축 후 private Storage 업로드와 사용자 JWT 기반 `analyze-image`
 - TypeScript/Zod 분석 응답 계약과 mock fixture 3종
 - light/dark 디자인 토큰과 허용 팔레트 테스트
 - 19개 public 테이블, enum, 인덱스, updated-at/history 트리거
@@ -85,7 +89,13 @@ CI는 시드를 다시 생성한 뒤 Git diff가 없는지 확인한다. 레시�
 
 빈 앱 디렉터리를 `.gitkeep`으로 미리 채우지 않는다. 각 단계가 실제 소유 파일과 함께 디렉터리를 생성한다.
 
-## 현재 검증 제한
+## 검증 상태와 제한
 
-현재 Codex App 샌드박스는 Docker 소켓 접근을 차단한다. 따라서 마이그레이션과 pgTAP 테스트는 정적 계약 테스트까지 실행됐으며, 실제 `supabase db reset`, DB 타입 생성, database advisor는 Docker가 허용되는 CI 또는 로컬 셸에서 반드시 실행해야 한다.
+현재 Codex App 샌드박스는 npm Registry DNS와 Docker 소켓 접근을 차단한다. 따라서 순수 TypeScript, lint, Vitest, 시드 검증은 실행했지만 다음 항목은 외부 환경에서 검증해야 한다.
 
+- `npm install` 후 Expo 앱 전체 타입검사와 web export
+- `supabase db reset`, pgTAP, DB 타입 생성, database advisor
+- iOS/Android 카메라·갤러리·알림 권한과 Maestro E2E
+- live LLM 1회 실측과 EAS 서명 빌드
+
+`confirm-analysis`, `deduct-inventory`, 추천, 탈퇴, expiry cron의 서버 계약은 SQL/API 문서에 정의돼 있으나 현재 앱 데모는 로컬 원자 상태 전이로 동작한다. 실제 multi-user production 전에는 이 네 서버 쓰기 경계를 RPC/Edge Function으로 연결하고 DB 통합 테스트를 통과해야 한다.
