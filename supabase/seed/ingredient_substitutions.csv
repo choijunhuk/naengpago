@@ -1,0 +1,11 @@
+id,fromMasterId,toMasterId,bidirectional,note
+"b6945bc8-1ae8-5b6b-a0ea-b81d6d0280d6","71a92339-42db-5de8-aa16-ce1e983bfb53","83d5cdb4-f6b0-5cae-add0-1267b73f9129","true","짠맛을 확인하며 양을 조절"
+"3faf2895-3fe0-5c84-a778-2bbf09e1690e","74e75ad3-e6fd-50c5-ab10-bd85837d7a71","6a30766e-3657-58d7-a799-81570838ea67","true","향과 식감이 다르므로 마무리 양을 조절"
+"8849a4f2-731b-56d8-a680-e043a7f556ac","5a71e316-3a87-588b-afc7-b33f477fc33e","f92388b8-8d01-5be4-a0fe-c355b34deedd","true","면 종류에 맞게 삶는 시간을 조절"
+"2bc99009-94a0-5153-a55a-0c3659af623f","35c4c0c0-d3fa-5e6a-a001-61edb0ffa0b4","b8dee7c3-c96a-517c-afce-139a75207b44","true","고온 조리 시 발연점을 확인"
+"c7af9e05-dd62-5a83-a664-96e0d3a5f8f7","c603cf07-cc36-595a-a3ca-f6ce847b5f96","15c9d8b5-a8ff-51d0-a012-8cfed3126206","true","수분과 단맛 차이를 고려"
+"7ba0e3ce-b853-5f32-adcc-965ca531e700","4842a67c-c12e-56e1-acb4-bb954d9bcc48","e17070a1-41f3-54b9-a6a4-e0a02f5e5a0e","true","염도가 달라 소량부터 사용"
+"b8d42246-1969-5a50-a0e0-bf0349374476","9affd5cb-cc23-52bb-a3cd-d6ea07ec2d3d","d7ac5f09-cad7-5aba-abe9-1b1b3f508d2b","false","소금과 전분을 별도로 보충"
+"2bec6dd9-9210-5fa2-ae29-d6bb271932a8","39c23786-78a0-5eeb-acec-12ba5a4e5e15","1ba2a345-3346-5036-a9dc-b9c673bad0e0","false","농도가 묽어질 수 있음"
+"43d53671-0928-5cb7-a805-690c68ecdc5c","d1b2aac2-c5d2-5d6c-a924-136d4d37e981","5026d916-370d-53e5-add7-d2004d2945cc","true","수분 차이를 고려"
+"6b5ffe2c-c73e-51cd-abf8-dad3eab62a9e","361b427f-3622-52ed-ae9b-265ea5651f22","8e220973-b793-5e7d-ab94-6232de6e3994","false","매운맛이 약해짐"

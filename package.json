@@ -13,8 +13,8 @@
     "test:watch": "vitest",
     "seed:generate": "node scripts/generate-seed-sql.mjs",
     "seed:validate": "node scripts/validate-seed.mjs",
-    "db:reset": "supabase db reset",
-    "db:test": "supabase test db",
+    "db:reset": "supabase db reset --local",
+    "db:test": "supabase test db --local supabase/tests",
     "db:types": "supabase gen types typescript --local --schema public > src/types/database.ts"
   },
   "dependencies": {

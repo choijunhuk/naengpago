@@ -30,8 +30,8 @@
 - Produces: `npm run typecheck`, `npm run lint`, `npm test`, `npm run seed:validate`
 
 - [x] Pin the Phase 0 toolchain and create the independent feature branch.
-- [ ] Install dependencies and verify the empty TypeScript/test baseline.
-- [ ] Commit the repository bootstrap using Lore trailers.
+- [x] Install dependencies and verify the empty TypeScript/test baseline.
+- [x] Commit the repository bootstrap using Lore trailers.
 
 ### Task 2: AI and design contracts with TDD
 
@@ -44,9 +44,9 @@
 **Interfaces:**
 - Produces: `AnalysisResponseSchema`, `DetectedItemSchema`, `themeTokens`
 
-- [ ] Write contract tests and verify they fail because implementations are absent.
-- [ ] Implement the minimum schemas, enums, tokens, and three fixtures.
-- [ ] Run targeted tests and then the full TypeScript/lint suite.
+- [x] Write contract tests and verify they fail because implementations are absent.
+- [x] Implement the minimum schemas, enums, tokens, and three fixtures.
+- [x] Run targeted tests and then the full TypeScript/lint suite.
 
 ### Task 3: Database schema, history guarantees, and RLS
 
@@ -65,8 +65,8 @@
 **Interfaces:**
 - Produces: all Phase 0 public tables/enums, `set_updated_at()`, inventory history trigger, household RLS helper.
 
-- [ ] Write SQL contract tests before implementing tables and policies.
-- [ ] Create migrations in dependency order with explicit checks and foreign keys.
+- [x] Write SQL contract tests before implementing tables and policies.
+- [x] Create migrations in dependency order with explicit checks and foreign keys.
 - [ ] Reset the local database and run pgTAP tests.
 - [ ] Run Supabase database advisors when the local CLI supports it.
 
@@ -80,10 +80,10 @@
 **Interfaces:**
 - Produces: 300+ ingredient masters, 1,000+ aliases, substitutions, 80+ Korean recipes with zero unmapped recipe ingredients.
 
-- [ ] Write failing validator tests for counts, duplicate aliases, broken references, and unmapped recipe ingredients.
-- [ ] Build deterministic source data and SQL generation without adding a CSV dependency.
-- [ ] Generate `seed.sql`, validate source and generated data, then reset the database.
-- [ ] Record a ten-item-per-category manual review in `docs/SEED_REVIEW.md`.
+- [x] Write failing validator tests for counts, duplicate aliases, broken references, and unmapped recipe ingredients.
+- [x] Build deterministic source data and SQL generation without adding a CSV dependency.
+- [ ] Generate `seed.sql`, validate source and generated data, then reset the database. (generation/validation complete; DB reset blocked by sandbox Docker socket)
+- [x] Record a ten-item-per-category manual review in `docs/SEED_REVIEW.md`.
 
 ### Task 5: Documentation, generated DB types, and CI
 
@@ -95,9 +95,8 @@
 **Interfaces:**
 - Produces: architecture SSOT, API contract, ERD, screen flow, generated TypeScript database types, Phase 0 CI.
 
-- [ ] Document implemented boundaries and explicitly defer Expo UI to Phase 1.
+- [x] Document implemented boundaries and explicitly defer Expo UI to Phase 1.
 - [ ] Generate database types from the reset local database.
-- [ ] Configure CI to run typecheck, lint, unit/contract tests, seed validation, database reset, and database tests.
+- [x] Configure CI to run typecheck, lint, unit/contract tests, seed validation, database reset, and database tests.
 - [ ] Run all quality gates and `git diff --check` from a clean install.
 - [ ] Commit with Lore protocol and report exact validation gaps before advancing automatically.
-
