@@ -11,4 +11,4 @@ supabase/.temp/
 supabase/.env
 *.log
 .DS_Store
-
+.serena/

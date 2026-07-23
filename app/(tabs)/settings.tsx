@@ -7,6 +7,7 @@ import { AppScreen } from '../../src/components/ui/app-screen';
 import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
 import { Card } from '../../src/components/ui/card';
+import { deleteAccount, signOutSession } from '../../src/features/auth/auth-service';
 import { useAppStore } from '../../src/stores/app-store';
 
 export default function SettingsScreen() {
@@ -24,6 +25,50 @@ export default function SettingsScreen() {
     { label: '알림 내역', icon: Bell, onPress: () => router.push('/notifications') },
     { label: '개인정보 및 AI 사진 안내', icon: ShieldCheck, onPress: () => Alert.alert('사진 처리 안내', '사진은 재료 인식 목적으로만 전송하며, LLM 키는 앱에 저장하지 않아요.') },
   ];
+  const finishSignOut = () => {
+    signOut();
+    router.replace('/(auth)/login');
+  };
+  const logout = async () => {
+    try {
+      await signOutSession();
+      finishSignOut();
+    } catch {
+      Alert.alert('로그아웃하지 못했어요', '네트워크 연결을 확인하고 다시 시도해 주세요.');
+    }
+  };
+  const requestDeletion = () => {
+    Alert.alert(
+      '회원 탈퇴',
+      '즉시 로그인이 차단되고 30일 후 프로필·재고·사진이 삭제됩니다. 유일한 OWNER라면 먼저 다른 구성원에게 위임해야 합니다.',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '계속',
+          style: 'destructive',
+          onPress: () => Alert.alert(
+            '정말 탈퇴할까요?',
+            '이 작업은 30일 유예 후 되돌릴 수 없습니다.',
+            [
+              { text: '취소', style: 'cancel' },
+              {
+                text: '회원 탈퇴',
+                style: 'destructive',
+                onPress: () => {
+                  void deleteAccount()
+                    .then(finishSignOut)
+                    .catch((cause) => Alert.alert(
+                      '탈퇴를 완료하지 못했어요',
+                      cause instanceof Error ? cause.message : '잠시 후 다시 시도해 주세요.',
+                    ));
+                },
+              },
+            ],
+          ),
+        },
+      ],
+    );
+  };
 
   return (
     <AppScreen title="프로필 · 설정" subtitle="내 식생활과 알림 방식을 관리해요." testID="settings-screen">
@@ -49,8 +94,8 @@ export default function SettingsScreen() {
           </Pressable>
         ))}
       </Card>
-      <Button label="로그아웃" variant="secondary" icon={<LogOut color="#78716C" size={20} strokeWidth={1.5} />} onPress={() => { signOut(); router.replace('/(auth)/login'); }} />
-      <Button label="회원 탈퇴 요청" variant="danger" onPress={() => Alert.alert('탈퇴 전 확인', '유일한 OWNER라면 위임 또는 household 삭제가 필요해요. 실제 탈퇴는 Supabase 연결 후 30일 유예로 처리됩니다.')} />
+      <Button label="로그아웃" variant="secondary" icon={<LogOut color="#78716C" size={20} strokeWidth={1.5} />} onPress={() => void logout()} />
+      <Button label="회원 탈퇴 요청" variant="danger" onPress={requestDeletion} />
     </AppScreen>
   );
 }

@@ -17,11 +17,11 @@
 | 함수 | 요청 | 성공 응답 | 주요 오류 |
 |---|---|---|---|
 | `analyze-image` | `POST { imageId, storageLocationHint? }` | `{ analysisId, status, candidates[] }` | `400`, `403`, `422`, `429`, `502` |
-| `confirm-analysis` | `POST { analysisId, decisions[], additions[] }` | `{ createdItemIds[], mergedItemIds[] }` | `400`, `409` |
-| `recommend-recipes` | `POST { mode, filters?, cursor? }` | `{ recipes[], nextCursor }` | `400`, `403` |
-| `deduct-inventory` | `POST { recipeId?, deductions[], mode }` | `{ updatedItems[], cookingHistoryId }` | `400`, `403`, `409` |
+| `confirm-analysis` | `POST { analysisId, decisions[], additions[] }` | `{ createdItemIds[], mergedItemIds[] }` | `400`, `401`, `409` |
+| `recommend-recipes` | `POST { mode, filters?, cursor? }` | `{ recipes[], nextCursor }` | `400`, `401`, `403` |
+| `deduct-inventory` | `POST { householdId, recipeId?, deductions[], mode, note? }` | `{ updatedItemIds[], cookingHistoryId }` | `400`, `401`, `403`, `409` |
 | `delete-account` | `POST { confirmText }` | `{ scheduledPurgeAt }` | `400`, `412` |
-| `expiry-scan` | cron 09:00 KST | 생성된 알림 수 | 내부 작업 전용 |
+| `expiry-scan` | `POST`, `x-cron-secret` | `{ createdNotifications, purgedAccounts }` | 내부 작업 전용 |
 
 ### 분석 응답 불변식
 
@@ -45,7 +45,18 @@
 
 `PURCHASED`이면서 아직 이동되지 않은 장보기 항목을 잠근다. 같은 household의 활성 저장공간인지 확인하고 재고를 만든 후 `moved_to_inventory=true`로 변경한다.
 
+### `confirm_image_analysis(target_analysis_id, target_decisions, target_additions) → jsonb`
+
+완료된 분석과 후보를 잠그고 후보별 사용자 결정을 기록한다. 신규 재고 생성과 기존 재고 추가·교체, `final_payload`, 재고 이력을 한 트랜잭션으로 반영한다. 이미 확정된 분석은 `409`로 수렴한다.
+
+### `deduct_inventory_atomic(target_household_id, target_recipe_id, target_deductions, target_mode, target_note) → jsonb`
+
+조리 이력을 먼저 만들고 차감 대상 재고를 행 잠금한다. 요청의 `expectedUpdatedAt`과 현재 값이 다르면 전체를 롤백하고 `409`를 반환한다. 성공한 변경은 `inventory_history.cooking_history_id`로 조리 이력과 연결된다.
+
+### `schedule_account_deletion() → timestamptz`
+
+유일 OWNER이면서 다른 구성원이 남은 household가 있으면 위임을 요구한다. 그 외에는 로그인을 차단할 soft-delete 상태와 30일 후 삭제 시각을 기록한다. 실제 Auth 사용자와 Storage 이미지는 `expiry-scan` 내부 퍼지에서 함께 삭제한다.
+
 ## 직접 쿼리
 
 `inventory_items`, `storage_locations`, `shopping_list_items`, `notifications`, `user_preferences`, `favorite_recipes`는 `supabase-js`로 접근한다. 목록은 안정적인 정렬 키와 `range` 페이지네이션을 사용한다. master/alias/substitution/recipe 카탈로그는 authenticated read-only다.
-

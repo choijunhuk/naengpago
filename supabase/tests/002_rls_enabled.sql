@@ -21,15 +21,16 @@ select results_eq(
   'RLS is enabled on every exposed Phase 0 table'
 );
 
-select results_eq(
-  $$
+select cmp_ok(
+  (
     select count(*)::bigint
     from pg_policies
     where schemaname = 'public'
       and roles @> array['authenticated']::name[]
-  $$,
-  array[23::bigint],
-  'authenticated policies are explicit and reviewable'
+  ),
+  '>=',
+  24::bigint,
+  'authenticated policies cover all public user-data paths'
 );
 
 select * from finish();

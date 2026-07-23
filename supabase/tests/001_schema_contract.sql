@@ -1,5 +1,5 @@
 begin;
-select plan(19);
+select plan(23);
 
 select has_table('public', 'profiles');
 select has_table('public', 'households');
@@ -20,7 +20,10 @@ select has_table('public', 'cooking_history');
 select has_table('public', 'shopping_list_items');
 select has_table('public', 'notifications');
 select has_table('public', 'user_preferences');
+select has_function('public', 'confirm_image_analysis');
+select has_function('public', 'deduct_inventory_atomic');
+select has_function('public', 'schedule_account_deletion');
+select has_function('private', 'is_active_user');
 
 select * from finish();
 rollback;
-

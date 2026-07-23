@@ -21,11 +21,11 @@ export default function AnalyzingScreen() {
       setStage('analyze');
       try {
         if (appEnv.aiMode === 'mock') await new Promise((resolve) => setTimeout(resolve, 1200));
-        const candidates = params.imageUri
+        const result = params.imageUri
           ? await uploadAndAnalyzeImage({ uri: params.imageUri, width: Number(params.width), height: Number(params.height) }, params.storageLocationHint)
           : null;
         if (!active) return;
-        if (candidates) setReviewCandidates(candidates, params.storageLocationHint);
+        if (result) setReviewCandidates(result.candidates, params.storageLocationHint, result.analysisId);
         router.replace('/capture/review');
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : '사진 분석에 실패했어요.');

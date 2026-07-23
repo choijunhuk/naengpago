@@ -1,7 +1,7 @@
 # 냉파고 아키텍처
 
-최종 갱신: 2026-07-22  
-현재 단계: mock-first MVP 통합 구현
+최종 갱신: 2026-07-23
+현재 단계: mock-first MVP + production server boundary 구현
 
 ## 제품 경계
 
@@ -29,11 +29,14 @@ Expo App
 - Zustand/AsyncStorage 기반 데모 인증·재고·분석 검토·추천·조리 차감·장보기 흐름
 - TanStack Query 앱 활성 상태 연결, SecureStore Supabase Auth 어댑터
 - 이미지 리사이즈/압축 후 private Storage 업로드와 사용자 JWT 기반 `analyze-image`
+- live 검토 결과의 `confirm-analysis` 연결과 `final_payload` 원자 저장
+- 4모드 서버 추천, 조리 차감, 탈퇴 예약, 만료 알림/계정 purge Edge Function
 - TypeScript/Zod 분석 응답 계약과 mock fixture 3종
 - light/dark 디자인 토큰과 허용 팔레트 테스트
 - 19개 public 테이블, enum, 인덱스, updated-at/history 트리거
 - household membership 기반 RLS와 private Storage 정책
 - 가입 프로필 생성, household 기본 공간 생성, household 참여, 장보기→재고 이동 RPC
+- 분석 확정·조리 차감 RPC의 행 잠금, 낙관적 충돌 감지, 조리-재고 이력 연결
 - master 362개, alias 1,532개, 대체재 10개, 레시피 91개
 - pgTAP 스키마/RLS/시드 무결성 테스트
 
@@ -50,11 +53,13 @@ Expo App
 - `create_household_with_defaults`: household, OWNER membership, 저장공간 4개
 - `join_household`: 초대 코드 확인과 membership 추가
 - `move_shopping_item_to_inventory`: 구매 항목 잠금, 재고 생성, 이동 완료 표시
-- 분석 확정과 조리 차감용 내부 트랜잭션은 각각 3단계와 5단계에서 추가한다.
+- `confirm_image_analysis`: 후보 결정/final payload, 신규 생성·병합, 이력 기록
+- `deduct_inventory_atomic`: 조리 이력, 재고 행 잠금, 낙관적 충돌 확인, 차감
+- `schedule_account_deletion`: OWNER 위임 검사, 즉시 soft delete, 30일 purge 예약
 
 ### 재고 이력
 
-`inventory_items`의 생성 또는 수량·레벨·삭제 상태 변경은 `private.record_inventory_history()` 트리거를 통과한다. UI나 RPC가 `inventory_items`만 갱신하더라도 이력 행을 생략할 수 없다. 조리 기록과 구체적인 사용자 사유 연결은 5단계 RPC에서 확장한다.
+`inventory_items`의 생성 또는 수량·레벨·삭제 상태 변경은 `private.record_inventory_history()` 트리거를 통과한다. UI나 RPC가 `inventory_items`만 갱신하더라도 이력 행을 생략할 수 없다. 조리 차감 RPC는 트랜잭션 로컬 설정으로 `cooking_history_id`와 사유를 트리거에 전달한다.
 
 ## 보안 경계
 
@@ -98,4 +103,4 @@ CI는 시드를 다시 생성한 뒤 Git diff가 없는지 확인한다. 레시�
 - iOS/Android 카메라·갤러리·알림 권한과 Maestro E2E
 - live LLM 1회 실측과 EAS 서명 빌드
 
-`confirm-analysis`, `deduct-inventory`, 추천, 탈퇴, expiry cron의 서버 계약은 SQL/API 문서에 정의돼 있으나 현재 앱 데모는 로컬 원자 상태 전이로 동작한다. 실제 multi-user production 전에는 이 네 서버 쓰기 경계를 RPC/Edge Function으로 연결하고 DB 통합 테스트를 통과해야 한다.
+`confirm-analysis`, `deduct-inventory`, 추천, 탈퇴, expiry cron의 서버 구현과 정적 보안 계약 테스트는 완료됐다. 현재 샌드박스에서는 Docker socket 접근이 막혀 실제 Postgres migration/pgTAP 통합 실행을 증명하지 못했으므로, multi-user production 배포 전 `db:reset`, `db:test`, 타입 생성과 타 household 침투 테스트가 마지막 런타임 게이트다. 모바일의 기본 CRUD·추천·조리 데모는 아직 mock-first이며, live 분석 검토 확정만 서버 경계에 연결돼 있다.

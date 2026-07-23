@@ -64,9 +64,21 @@ export default {
     const body = requestSchema.safeParse(await request.json().catch(() => null));
     if (!body.success) return apiError('REQUEST_INVALID', '사진 요청 형식이 올바르지 않아요.', 400, body.error.flatten());
 
+    const dailyLimit = Number(Deno.env.get('ANALYSIS_DAILY_LIMIT') ?? 30);
+    const dayStart = new Date();
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const { count: dailyCount } = await client
+      .from('image_analyses')
+      .select('id, ingredient_images!inner(uploaded_by)', { count: 'exact', head: true })
+      .eq('ingredient_images.uploaded_by', userData.user.id)
+      .gte('created_at', dayStart.toISOString());
+    if ((dailyCount ?? 0) >= dailyLimit) {
+      return apiError('ANALYSIS_LIMIT_EXCEEDED', '오늘 사진 분석 한도를 모두 사용했어요. 직접 추가를 이용해 주세요.', 429);
+    }
+
     const { data: image, error: imageError } = await client
       .from('ingredient_images')
-      .select('id, storage_path')
+      .select('id, household_id, storage_path')
       .eq('id', body.data.imageId)
       .is('deleted_at', null)
       .single();
@@ -96,20 +108,48 @@ export default {
         }
       }
 
-      const rows = payload.detectedItems.map((item) => ({
-        analysis_id: analysis.id,
-        raw_name: item.rawName,
-        matched_master_id: null,
-        display_name: item.normalizedNameKo,
-        category: item.category,
-        quantity_type: item.quantityType,
-        estimated_count: item.estimatedCount,
-        unit: item.unit,
-        remaining_level: item.remainingLevel,
-        confidence: item.confidence,
-        bounding_box: item.boundingBox,
-        package_info: item.packageInfo,
-      }));
+      const rows = [];
+      for (const item of payload.detectedItems) {
+        const aliases = Array.from(new Set([item.rawName, item.normalizedNameKo]));
+        const { data: alias } = await client
+          .from('ingredient_aliases')
+          .select('master_id')
+          .in('alias', aliases)
+          .limit(1)
+          .maybeSingle();
+        let duplicateId: string | null = null;
+        if (alias?.master_id) {
+          let duplicateQuery = client
+            .from('inventory_items')
+            .select('id')
+            .eq('household_id', image.household_id)
+            .eq('master_id', alias.master_id)
+            .is('deleted_at', null);
+          if (body.data.storageLocationHint) {
+            duplicateQuery = duplicateQuery.eq('storage_location_id', body.data.storageLocationHint);
+          }
+          const { data: duplicate } = await duplicateQuery
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          duplicateId = duplicate?.id ?? null;
+        }
+        rows.push({
+          analysis_id: analysis.id,
+          raw_name: item.rawName,
+          matched_master_id: alias?.master_id ?? null,
+          display_name: item.normalizedNameKo,
+          category: item.category,
+          quantity_type: item.quantityType,
+          estimated_count: item.estimatedCount,
+          unit: item.unit,
+          remaining_level: item.remainingLevel,
+          confidence: item.confidence,
+          bounding_box: item.boundingBox,
+          package_info: item.packageInfo,
+          duplicate_of_item_id: duplicateId,
+        });
+      }
       let candidates: unknown[] = [];
       if (rows.length > 0) {
         const { data, error: candidateError } = await client

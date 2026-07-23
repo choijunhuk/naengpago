@@ -1,7 +1,7 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import type { ImagePickerAsset } from 'expo-image-picker';
 
-import type { AnalysisCandidateInput } from '../../domain/models';
+import type { AnalysisCandidateInput, ReviewCandidate } from '../../domain/models';
 import { appEnv } from '../../lib/env';
 import { supabase } from '../../lib/supabase';
 
@@ -42,10 +42,15 @@ interface AnalyzeResponse {
   }>;
 }
 
+export interface AnalysisResult {
+  analysisId: string;
+  candidates: AnalysisCandidateInput[];
+}
+
 export async function uploadAndAnalyzeImage(
   image: PreparedImage,
   storageLocationHint?: string,
-): Promise<AnalysisCandidateInput[] | null> {
+): Promise<AnalysisResult | null> {
   if (appEnv.aiMode === 'mock') return null;
   if (!supabase) throw new Error('Supabase 환경 변수가 필요해요.');
 
@@ -85,18 +90,63 @@ export async function uploadAndAnalyzeImage(
     body: { imageId: imageRow.id, storageLocationHint },
   });
   if (error || !data) throw error ?? new Error('사진 분석에 실패했어요.');
-  return data.candidates.map((candidate) => ({
-    id: candidate.id,
-    rawName: candidate.raw_name,
-    matchedMasterId: candidate.matched_master_id,
-    displayName: candidate.display_name,
-    category: candidate.category,
-    quantityType: candidate.quantity_type,
-    estimatedCount: candidate.estimated_count,
-    unit: candidate.unit,
-    remainingLevel: candidate.remaining_level,
-    confidence: candidate.confidence,
-    duplicateOfItemId: candidate.duplicate_of_item_id,
-  }));
+  return {
+    analysisId: data.analysisId,
+    candidates: data.candidates.map((candidate) => ({
+      id: candidate.id,
+      rawName: candidate.raw_name,
+      matchedMasterId: candidate.matched_master_id,
+      displayName: candidate.display_name,
+      category: candidate.category,
+      quantityType: candidate.quantity_type,
+      estimatedCount: candidate.estimated_count,
+      unit: candidate.unit,
+      remainingLevel: candidate.remaining_level,
+      confidence: candidate.confidence,
+      duplicateOfItemId: candidate.duplicate_of_item_id,
+    })),
+  };
 }
 
+export async function confirmLiveAnalysis(
+  analysisId: string,
+  draft: ReviewCandidate[],
+): Promise<{ createdItemIds: string[]; mergedItemIds: string[] }> {
+  if (!supabase) throw new Error('Supabase 환경 변수가 필요해요.');
+  const decisions = draft.map((candidate) => {
+    const ignored = !candidate.selected || candidate.duplicateAction === 'IGNORE';
+    const action = ignored
+      ? 'DELETED'
+      : candidate.duplicateAction === 'ADD'
+        ? 'MERGED_ADD'
+        : candidate.duplicateAction === 'REPLACE'
+          ? 'MERGED_REPLACE'
+          : 'EDITED';
+    return {
+      candidateId: candidate.id,
+      action,
+      mergeTargetItemId: action.startsWith('MERGED_') ? candidate.duplicateOfItemId : undefined,
+      finalPayload: ignored ? undefined : {
+        masterId: candidate.matchedMasterId,
+        displayName: candidate.displayName,
+        category: candidate.category,
+        quantityType: candidate.quantityType,
+        quantity: candidate.quantity,
+        unit: candidate.unit,
+        remainingLevel: candidate.remainingLevel,
+        remainingPercent: null,
+        storageLocationId: candidate.storageLocationId,
+        expirationDate: candidate.expirationDate,
+        expirationType: 'UNKNOWN',
+      },
+    };
+  });
+  const { data, error } = await supabase.functions.invoke<{
+    createdItemIds: string[];
+    mergedItemIds: string[];
+  }>('confirm-analysis', {
+    body: { analysisId, decisions, additions: [] },
+  });
+  if (error || !data) throw error ?? new Error('분석 결과를 저장하지 못했어요.');
+  return data;
+}

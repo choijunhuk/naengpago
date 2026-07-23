@@ -52,6 +52,7 @@ interface AppStore {
   theme: 'SYSTEM' | 'LIGHT' | 'DARK';
   inventory: InventoryItem[];
   storageLocations: StorageLocation[];
+  reviewAnalysisId: string | null;
   reviewDraft: ReviewCandidate[];
   shoppingItems: ShoppingItem[];
   favoriteRecipeIds: string[];
@@ -69,7 +70,7 @@ interface AppStore {
   deleteInventory: (id: string) => void;
   addStorageLocation: (name: string) => void;
   resetReviewDraft: (storageLocationId?: string) => void;
-  setReviewCandidates: (candidates: AnalysisCandidateInput[], storageLocationId?: string) => void;
+  setReviewCandidates: (candidates: AnalysisCandidateInput[], storageLocationId?: string, analysisId?: string) => void;
   updateReviewCandidate: (id: string, patch: Partial<ReviewCandidate>) => void;
   confirmReview: () => number;
   toggleFavorite: (recipeId: string) => void;
@@ -91,6 +92,7 @@ export const useAppStore = create<AppStore>()(
       theme: 'SYSTEM',
       inventory: mockInventory,
       storageLocations: mockStorageLocations,
+      reviewAnalysisId: null,
       reviewDraft: initialReviewDraft,
       shoppingItems: mockShoppingItems,
       favoriteRecipeIds: [],
@@ -154,9 +156,9 @@ export const useAppStore = create<AppStore>()(
           ],
         })),
       resetReviewDraft: (storageLocationId = 'storage-fridge') =>
-        set({ reviewDraft: createReviewDraft(mockAnalysisItems, storageLocationId) }),
-      setReviewCandidates: (candidates, storageLocationId = 'storage-fridge') =>
-        set({ reviewDraft: createReviewDraft(candidates, storageLocationId) }),
+        set({ reviewAnalysisId: null, reviewDraft: createReviewDraft(mockAnalysisItems, storageLocationId) }),
+      setReviewCandidates: (candidates, storageLocationId = 'storage-fridge', analysisId) =>
+        set({ reviewAnalysisId: analysisId ?? null, reviewDraft: createReviewDraft(candidates, storageLocationId) }),
       updateReviewCandidate: (id, patch) =>
         set((state) => ({
           reviewDraft: state.reviewDraft.map((candidate) =>
@@ -172,6 +174,7 @@ export const useAppStore = create<AppStore>()(
             ...result.created,
             ...state.inventory.map((item) => result.updated.find((updated) => updated.id === item.id) ?? item),
           ],
+          reviewAnalysisId: null,
           reviewDraft: initialReviewDraft,
           notifications: [
             { id: `notification-analysis-${Date.now()}`, title: '사진 등록이 끝났어요', body: `${result.created.length + result.updated.length}개 재료를 반영했어요.`, target: '/(tabs)/inventory', read: false },
@@ -245,6 +248,7 @@ export const useAppStore = create<AppStore>()(
         theme: state.theme,
         inventory: state.inventory,
         storageLocations: state.storageLocations,
+        reviewAnalysisId: state.reviewAnalysisId,
         reviewDraft: state.reviewDraft,
         shoppingItems: state.shoppingItems,
         favoriteRecipeIds: state.favoriteRecipeIds,

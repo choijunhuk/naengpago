@@ -2,12 +2,12 @@
 
 사진 한 장으로 냉장고 속 식재료를 기록하고, 지금 보유한 재료로 만들 수 있는 요리를 추천하는 모바일 앱입니다.
 
-현재 저장소에는 Expo SDK 57 모바일 앱, mock-first 핵심 사용자 흐름, Supabase 스키마/RLS/시드, `analyze-image` Edge Function이 함께 들어 있습니다. 외부 키 없이도 mock 모드에서 가입→사진 분석 검토→재고 저장→추천→조리 차감→장보기 이동을 체험할 수 있습니다.
+현재 저장소에는 Expo SDK 57 모바일 앱, mock-first 핵심 사용자 흐름, Supabase 스키마/RLS/시드, 6개 Edge Function과 원자적 재고 RPC가 함께 들어 있습니다. 외부 키 없이도 mock 모드에서 가입→사진 분석 검토→재고 저장→추천→조리 차감→장보기 이동을 체험할 수 있고, live 분석 확정은 실제 서버 트랜잭션으로 연결됩니다.
 
 ## 빠른 시작
 
 ```bash
-nvm use 24
+nvm use 22
 npm install
 cp .env.example .env
 npx expo start
@@ -36,11 +36,12 @@ Supabase 로컬 개발에는 Docker API 호환 컨테이너 런타임이 필요�
 - Expo Router 21개 제품 화면과 한국어 정상/빈/로딩/오류 상태 컴포넌트
 - Zustand 영속 mock 재고, 분석 검토 draft, 추천, 장보기, 조리 차감
 - TanStack Query 포그라운드 refetch 기반과 SecureStore Supabase 세션 어댑터
-- 이미지 1568px/JPEG 0.8 압축, private Storage 업로드, mock/live `analyze-image`
+- 이미지 1568px/JPEG 0.8 압축, private Storage 업로드, mock/live 분석과 live 검토 확정
+- 사진 확정·조리 차감·탈퇴 예약 RPC, 서버 추천 4모드, 만료 알림/30일 계정 purge 작업
 - master 362개, alias 1,532개, 레시피 91개 시드와 RLS/pgTAP 계약
 - Vitest 도메인/보안/라우트 계약과 Maestro 전체 mock 흐름
 
-실제 Supabase DB 실행, Expo 번들, 기기 권한, live LLM, EAS 서명은 외부 권한이 필요합니다. 순서는 [사용자 작업 체크리스트](docs/USER_ACTIONS.md)에 정리했습니다.
+실제 Supabase DB 실행, Expo 번들, 기기 권한, live LLM, EAS 서명은 현재 샌드박스 밖의 Docker·네트워크·계정 권한이 필요합니다. 남은 명령은 [외부 권한 체크리스트](docs/USER_ACTIONS.md)에 정리했습니다.
 
 ## 문서
 
