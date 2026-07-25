@@ -146,4 +146,67 @@ describe('database migration contract', () => {
     expect(sql).toContain('user_preferences_own_active_rows');
     expect(sql).toContain('select private.is_active_user(target_user_id)');
   });
+
+  it('lets account purge cascade by nulling actor foreign keys on delete', () => {
+    const sql = migrationSource();
+    const actorConstraints = [
+      'households_created_by_fkey',
+      'inventory_items_created_by_fkey',
+      'inventory_history_changed_by_fkey',
+      'ingredient_images_uploaded_by_fkey',
+      'cooking_history_cooked_by_fkey',
+      'shopping_list_items_added_by_fkey',
+      'shopping_list_items_purchased_by_fkey',
+      'ingredient_aliases_created_by_fkey',
+    ];
+    for (const constraint of actorConstraints) {
+      expect(sql, constraint).toContain(constraint);
+    }
+    expect(sql).toContain('on delete set null');
+  });
+
+  it('makes the signup trigger idempotent', () => {
+    const sql = migrationSource();
+
+    expect(sql).toContain('function private.handle_new_user');
+    expect(sql).toContain('on conflict (id) do nothing');
+    expect(sql).toContain('on conflict (user_id) do nothing');
+  });
+
+  it('ingests image analysis atomically under a per-uploader advisory lock', () => {
+    const sql = migrationSource();
+
+    expect(sql).toContain('function public.ingest_image_analysis');
+    expect(sql).toContain('pg_advisory_xact_lock');
+    expect(sql).toContain("errcode = 'pt429'");
+    expect(sql).toContain('grant execute on function public.ingest_image_analysis');
+    expect(sql).toContain('revoke all on function public.ingest_image_analysis');
+  });
+
+  it('locks candidate and analysis writes to definer RPCs only', () => {
+    const sql = migrationSource();
+
+    expect(sql).toContain('image_analyses_member_select');
+    expect(sql).toContain('image_candidates_member_select');
+    expect(sql).toContain('revoke insert, update, delete on table public.image_analyses from authenticated');
+    expect(sql).toContain('revoke insert, update, delete on table public.image_analysis_candidates from authenticated');
+    expect(sql).toContain('drop policy if exists image_analyses_member_all on public.image_analyses');
+    expect(sql).toContain('drop policy if exists image_candidates_member_all on public.image_analysis_candidates');
+  });
+
+  it('adds the supporting indexes for purge and hot joins', () => {
+    const sql = migrationSource();
+    const indexes = [
+      'ingredient_images_uploaded_by_idx',
+      'cooking_history_household_idx',
+      'cooking_history_recipe_idx',
+      'inventory_history_item_idx',
+      'image_analyses_image_idx',
+      'profiles_deletion_scheduled_idx',
+      'shopping_list_items_source_recipe_idx',
+    ];
+    for (const index of indexes) {
+      expect(sql, index).toContain(index);
+    }
+  });
 });

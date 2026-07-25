@@ -53,6 +53,7 @@ Expo App
 - `create_household_with_defaults`: household, OWNER membership, 저장공간 4개
 - `join_household`: 초대 코드 확인과 membership 추가
 - `move_shopping_item_to_inventory`: 구매 항목 잠금, 재고 생성, 이동 완료 표시
+- `ingest_image_analysis`: 이미지 접근 확인, advisory lock 기반 일일 한도, 분석 행·alias 일괄 매칭·중복 감지·후보 삽입
 - `confirm_image_analysis`: 후보 결정/final payload, 신규 생성·병합, 이력 기록
 - `deduct_inventory_atomic`: 조리 이력, 재고 행 잠금, 낙관적 충돌 확인, 차감
 - `schedule_account_deletion`: OWNER 위임 검사, 즉시 soft delete, 30일 purge 예약
@@ -67,6 +68,8 @@ Expo App
 - household 접근은 `private.is_household_member()` 또는 `private.is_household_owner()`로 검사한다.
 - helper는 RLS 재귀를 피하기 위해 private schema의 `SECURITY DEFINER`로 두고, 고정된 빈 `search_path`, 명시적 `auth.uid()` 인자, 제한된 `EXECUTE` 권한을 사용한다.
 - 공개 RPC도 호출자를 직접 확인하고 `PUBLIC` 실행 권한을 회수한다.
+- `image_analyses`, `image_analysis_candidates`는 멤버 읽기 전용이다. 모든 쓰기는 `ingest_image_analysis`, `confirm_image_analysis` 등 `SECURITY DEFINER` RPC로만 이뤄져 클라이언트가 `final_payload`를 직접 조작할 수 없다.
+- 계정 purge가 성사되도록 actor 외래키(`created_by`, `changed_by`, `uploaded_by`, `cooked_by`, `added_by`, `purchased_by`)는 `on delete set null`이며, 이력 행은 actor가 null이 되어도 보존된다.
 - 이미지 버킷은 private이며 15 MiB, JPEG/PNG/WebP만 허용한다. 클라이언트 압축 목표는 1.5 MiB다.
 - 서비스 역할과 LLM 키는 모바일 번들에 포함하지 않는다.
 
