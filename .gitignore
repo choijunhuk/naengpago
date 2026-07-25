@@ -12,3 +12,4 @@ supabase/.env
 *.log
 .DS_Store
 .serena/
+.omc/
