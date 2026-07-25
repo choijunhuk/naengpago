@@ -6,6 +6,7 @@ import { Text, View } from 'react-native';
 import { AppScreen } from '../../src/components/ui/app-screen';
 import { Button } from '../../src/components/ui/button';
 import { useAppStore } from '../../src/stores/app-store';
+import { useIconColors } from '../../src/theme/icon-colors';
 
 const pages = [
   { title: '사진 한 장이면 충분해요', body: '냉장고나 장본 재료를 찍으면 AI가 등록 후보를 정리해요.', icon: Camera },
@@ -14,6 +15,7 @@ const pages = [
 ];
 
 export default function OnboardingScreen() {
+  const iconColors = useIconColors();
   const [index, setIndex] = useState(0);
   const finishOnboarding = useAppStore((state) => state.finishOnboarding);
   const page = pages[index] ?? pages[0];
@@ -32,7 +34,7 @@ export default function OnboardingScreen() {
         </View>
         <View className="items-center gap-6 px-4">
           <View className="h-40 w-40 items-center justify-center rounded-full border border-line-light bg-surface-light dark:border-line-dark dark:bg-surface-dark">
-            <Icon color="#16A34A" size={64} strokeWidth={1.5} />
+            <Icon color={iconColors.primary} size={64} strokeWidth={1.5} />
           </View>
           <View className="gap-3">
             <Text className="text-center font-sans text-2xl font-bold leading-9 text-ink-light dark:text-ink-dark">{page.title}</Text>

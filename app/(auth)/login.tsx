@@ -16,6 +16,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const signInDemo = useAppStore((state) => state.signInDemo);
+  const signInLive = useAppStore((state) => state.signInLive);
 
   const submit = async () => {
     setError('');
@@ -30,7 +31,8 @@ export default function LoginScreen() {
       setError(result.message ?? '로그인에 실패했어요.');
       return;
     }
-    signInDemo(email.trim());
+    if (result.user) signInLive(result.user);
+    else signInDemo(email.trim());
     router.replace('/(tabs)/home');
   };
 

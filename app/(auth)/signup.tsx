@@ -15,6 +15,7 @@ export default function SignupScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const signInDemo = useAppStore((state) => state.signInDemo);
+  const signInLive = useAppStore((state) => state.signInLive);
 
   const submit = async () => {
     setError('');
@@ -34,7 +35,8 @@ export default function SignupScreen() {
       router.replace('/(auth)/login');
       return;
     }
-    signInDemo(email.trim(), nickname.trim());
+    if (result.user) signInLive(result.user);
+    else signInDemo(email.trim(), nickname.trim());
     router.replace('/(tabs)/home');
   };
 

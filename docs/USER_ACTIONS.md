@@ -52,3 +52,20 @@ npx supabase functions deploy analyze-image confirm-analysis recommend-recipes d
 ```
 
 모바일 번들의 `EXPO_PUBLIC_*` 변수에는 비밀 키를 넣지 않는다. EAS 배포 시에는 Expo 계정으로 로그인하고 `eas build:configure` 후 스토어의 실제 bundle identifier/package name, 개인정보 처리방침 URL, 앱 아이콘과 스크린샷을 확정한다.
+
+## 6. pgTAP 행동 테스트 실행
+
+`supabase/tests/`의 pgTAP 스위트(`001`~`006`)는 로컬 Postgres 인스턴스가 필요해 Docker가 있어야 실행할 수 있다. 현재 자동화 환경에서는 Docker 접근이 차단되어 있어 실행하지 못했고, 아래 명령을 Docker Desktop이 켜진 일반 터미널에서 한 번 수행해야 한다.
+
+```bash
+npx supabase start
+npm run db:reset   # 마이그레이션 + seed.sql(카탈로그 시드) 적용
+npm run db:test    # 001~006 pgTAP 스위트 실행
+```
+
+- `001_schema_contract` / `002_rls_enabled` / `003_seed_integrity`: 테이블·RLS·시드 계약.
+- `004_rpc_behaviors`(27건): `create_household_with_defaults`, `join_household`, `move_shopping_item_to_inventory`, `confirm_image_analysis`, `deduct_inventory_atomic`, `schedule_account_deletion`, `ingest_image_analysis` RPC 동작과 계정 삭제 FK(set null) 검증.
+- `005_rls_isolation`(16건): 다른 세대 데이터 조회·수정·삭제 차단, 후보(candidate) 직접 쓰기 차단, `inventory_history` 읽기 전용, 카탈로그 공유 읽기.
+- `006_triggers`(8건): `set_updated_at`, `record_inventory_history`(CREATE/CONSUME/DISCARD), `handle_new_user` 프로비저닝·멱등성.
+
+`004`~`006`은 카탈로그 시드(`ingredient_master`/`ingredient_aliases`/`recipes`)가 이미 로드된 상태를 전제하므로 반드시 `db:reset` 뒤에 실행한다.

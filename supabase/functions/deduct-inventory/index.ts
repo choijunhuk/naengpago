@@ -1,6 +1,7 @@
 import { z } from 'npm:zod@4.4.3';
 
 import { authenticateRequest } from '../_shared/auth.ts';
+import { mapDbError } from '../_shared/errors.ts';
 import { apiError, corsHeaders, json } from '../_shared/http.ts';
 
 const requestSchema = z.object({
@@ -40,11 +41,14 @@ export default {
       target_mode: body.data.mode,
       target_note: body.data.note ?? null,
     });
-    if (error?.message.includes('INVENTORY_CONFLICT')) {
-      return apiError('INVENTORY_CONFLICT', '다른 구성원이 재고를 먼저 수정했어요. 최신 값으로 다시 확인해 주세요.', 409);
+    if (error) {
+      return mapDbError(error, {
+        INVENTORY_CONFLICT: { message: '다른 구성원이 재고를 먼저 수정했어요. 최신 값으로 다시 확인해 주세요.' },
+        HOUSEHOLD_FORBIDDEN: { message: '이 household에 접근할 수 없어요.' },
+        INVENTORY_ITEM_NOT_FOUND: { message: '차감할 재고를 찾을 수 없어요.' },
+        RECIPE_NOT_FOUND: { message: '레시피를 찾을 수 없어요.' },
+      }, { code: 'DEDUCTION_FAILED', message: '재고 차감을 적용하지 못했어요.', status: 500 });
     }
-    if (error?.code === '42501') return apiError('HOUSEHOLD_FORBIDDEN', '이 household에 접근할 수 없어요.', 403);
-    if (error) return apiError('DEDUCTION_FAILED', '재고 차감을 적용하지 못했어요.', 400);
     return json(data);
   },
 };

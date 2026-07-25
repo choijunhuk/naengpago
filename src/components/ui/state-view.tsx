@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, Text } from 'react-native';
 import { AlertCircle, PackageOpen } from 'lucide-react-native';
 
+import { useIconColors } from '../../theme/icon-colors';
 import { Button } from './button';
 import { Card } from './card';
 
@@ -24,11 +25,12 @@ export function StateView({
   errorMessage = '불러오지 못했어요. 잠시 후 다시 시도해주세요.',
   onRetry,
 }: StateViewProps) {
+  const iconColors = useIconColors();
   if (state === 'ready') return <>{children}</>;
   if (state === 'loading') {
     return (
       <Card className="items-center gap-3 py-10">
-        <ActivityIndicator color="#16A34A" />
+        <ActivityIndicator color={iconColors.primary} />
         <Text className="font-sans text-sm text-muted-light dark:text-muted-dark">내용을 준비하고 있어요</Text>
       </Card>
     );
@@ -36,7 +38,7 @@ export function StateView({
   if (state === 'error') {
     return (
       <Card className="items-center gap-3 py-8">
-        <AlertCircle color="#EF4444" size={24} strokeWidth={1.5} />
+        <AlertCircle color={iconColors.danger} size={24} strokeWidth={1.5} />
         <Text className="text-center font-sans text-[15px] text-ink-light dark:text-ink-dark">{errorMessage}</Text>
         {onRetry ? <Button label="다시 시도" variant="secondary" fullWidth={false} onPress={onRetry} /> : null}
       </Card>
@@ -44,7 +46,7 @@ export function StateView({
   }
   return (
     <Card className="items-center gap-3 py-10">
-      <PackageOpen color="#78716C" size={24} strokeWidth={1.5} />
+      <PackageOpen color={iconColors.muted} size={24} strokeWidth={1.5} />
       <Text className="font-sans text-lg font-semibold text-ink-light dark:text-ink-dark">{emptyTitle}</Text>
       <Text className="text-center font-sans text-sm leading-5 text-muted-light dark:text-muted-dark">{emptyBody}</Text>
     </Card>

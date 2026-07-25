@@ -19,8 +19,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      # TODO(#마감): 샌드박스 밖에서 Expo lockfile을 갱신한 뒤 npm ci로 되돌린다.
-      - run: npm install --ignore-scripts
+      - run: npm ci
       - run: npm run typecheck
       - run: npm run typecheck:app
       - run: npm run lint

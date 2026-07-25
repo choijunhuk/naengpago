@@ -8,10 +8,14 @@ import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
 import { Card } from '../../src/components/ui/card';
 import { deleteAccount, signOutSession } from '../../src/features/auth/auth-service';
+import { useHousehold } from '../../src/features/data/household';
 import { useAppStore } from '../../src/stores/app-store';
+import { useIconColors } from '../../src/theme/icon-colors';
 
 export default function SettingsScreen() {
+  const iconColors = useIconColors();
   const session = useAppStore((state) => state.session);
+  const myRole = useHousehold().data?.myRole ?? 'MEMBER';
   const theme = useAppStore((state) => state.theme);
   const setTheme = useAppStore((state) => state.setTheme);
   const signOut = useAppStore((state) => state.signOut);
@@ -75,13 +79,13 @@ export default function SettingsScreen() {
       <Card className="flex-row items-center gap-3">
         <View className="h-14 w-14 items-center justify-center rounded-full bg-primary-light dark:bg-primary-dark"><Text className="font-sans text-xl font-bold text-white dark:text-app-dark">{session?.nickname.slice(0, 1)}</Text></View>
         <View className="flex-1 gap-1"><Text className="font-sans text-lg font-semibold text-ink-light dark:text-ink-dark">{session?.nickname}</Text><Text className="font-sans text-sm text-muted-light dark:text-muted-dark">{session?.email}</Text></View>
-        <Badge label="OWNER" tone="success" />
+        <Badge label={myRole} tone={myRole === 'OWNER' ? 'success' : 'neutral'} />
       </Card>
       <Card className="gap-3">
-        <View className="flex-row items-center gap-2"><Moon color="#78716C" size={20} strokeWidth={1.5} /><Text className="font-sans text-[15px] font-semibold text-ink-light dark:text-ink-dark">화면 모드</Text></View>
+        <View className="flex-row items-center gap-2"><Moon color={iconColors.muted} size={20} strokeWidth={1.5} /><Text className="font-sans text-[15px] font-semibold text-ink-light dark:text-ink-dark">화면 모드</Text></View>
         <View className="flex-row gap-2">
           {(['SYSTEM', 'LIGHT', 'DARK'] as const).map((value) => (
-            <Pressable key={value} className={`min-h-11 flex-1 items-center justify-center rounded-button border ${theme === value ? 'border-primary-light bg-primary-light dark:border-primary-dark dark:bg-primary-dark' : 'border-line-light dark:border-line-dark'}`} onPress={() => chooseTheme(value)}>
+            <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: theme === value }} accessibilityLabel={value === 'SYSTEM' ? '시스템' : value === 'LIGHT' ? '라이트' : '다크'} className={`min-h-11 flex-1 items-center justify-center rounded-button border ${theme === value ? 'border-primary-light bg-primary-light dark:border-primary-dark dark:bg-primary-dark' : 'border-line-light dark:border-line-dark'}`} onPress={() => chooseTheme(value)}>
               <Text className={`font-sans text-sm ${theme === value ? 'font-semibold text-white dark:text-app-dark' : 'text-muted-light dark:text-muted-dark'}`}>{value === 'SYSTEM' ? '시스템' : value === 'LIGHT' ? '라이트' : '다크'}</Text>
             </Pressable>
           ))}
@@ -90,11 +94,11 @@ export default function SettingsScreen() {
       <Card className="p-0">
         {rows.map(({ label, icon: Icon, onPress }, index) => (
           <Pressable key={label} className={`min-h-14 flex-row items-center gap-3 px-4 ${index ? 'border-t border-line-light dark:border-line-dark' : ''}`} onPress={onPress}>
-            <Icon color="#78716C" size={20} strokeWidth={1.5} /><Text className="flex-1 font-sans text-[15px] text-ink-light dark:text-ink-dark">{label}</Text><ChevronRight color="#78716C" size={20} strokeWidth={1.5} />
+            <Icon color={iconColors.muted} size={20} strokeWidth={1.5} /><Text className="flex-1 font-sans text-[15px] text-ink-light dark:text-ink-dark">{label}</Text><ChevronRight color={iconColors.muted} size={20} strokeWidth={1.5} />
           </Pressable>
         ))}
       </Card>
-      <Button label="로그아웃" variant="secondary" icon={<LogOut color="#78716C" size={20} strokeWidth={1.5} />} onPress={() => void logout()} />
+      <Button label="로그아웃" variant="secondary" icon={<LogOut color={iconColors.muted} size={20} strokeWidth={1.5} />} onPress={() => void logout()} />
       <Button label="회원 탈퇴 요청" variant="danger" onPress={requestDeletion} />
     </AppScreen>
   );

@@ -1,6 +1,7 @@
 import { z } from 'npm:zod@4.4.3';
 
 import { authenticateRequest } from '../_shared/auth.ts';
+import { mapDbError } from '../_shared/errors.ts';
 import { apiError, corsHeaders, json } from '../_shared/http.ts';
 
 const payloadSchema = z.object({
@@ -76,10 +77,14 @@ export default {
       target_additions: additions,
     });
 
-    if (error?.message.includes('ANALYSIS_ALREADY_CONFIRMED')) {
-      return apiError('ANALYSIS_ALREADY_CONFIRMED', '이미 저장된 분석 결과예요.', 409);
+    if (error) {
+      return mapDbError(error, {
+        ANALYSIS_ALREADY_CONFIRMED: { message: '이미 저장된 분석 결과예요.' },
+        ANALYSIS_NOT_FOUND: { message: '분석 결과를 찾을 수 없어요.' },
+        STORAGE_LOCATION_INVALID: { message: '저장 위치를 다시 선택해 주세요.' },
+        MERGE_TARGET_INVALID: { message: '병합할 재고를 다시 선택해 주세요.' },
+      }, { code: 'CONFIRM_FAILED', message: '재료를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.', status: 500 });
     }
-    if (error) return apiError('CONFIRM_FAILED', '재료를 저장하지 못했어요. 입력값을 확인해 주세요.', 400);
     return json(data);
   },
 };

@@ -4,6 +4,7 @@ import { authenticateRequest } from '../_shared/auth.ts';
 import { apiError, corsHeaders, json } from '../_shared/http.ts';
 
 const requestSchema = z.object({
+  householdId: z.string().uuid().optional(),
   mode: z.enum(['NOW', 'ALMOST', 'EXPIRING', 'QUICK']),
   filters: z.object({
     difficulty: z.array(z.enum(['EASY', 'NORMAL', 'HARD'])).optional(),
@@ -11,6 +12,12 @@ const requestSchema = z.object({
   }).optional(),
   cursor: z.string().regex(/^\d+$/u).optional(),
 });
+
+// Catalog is small today (91 recipes); the cap only guards against unbounded
+// growth and logs when reached so it can be revisited.
+const RECIPE_QUERY_CAP = 500;
+const RECIPE_INGREDIENT_QUERY_CAP = 5_000;
+const MASTER_QUERY_CAP = 5_000;
 
 type InventoryRow = {
   id: string;
@@ -39,12 +46,29 @@ export default {
     const body = requestSchema.safeParse(await request.json().catch(() => null));
     if (!body.success) return apiError('REQUEST_INVALID', '추천 조건을 다시 확인해 주세요.', 400, body.error.flatten());
 
-    const { data: membership } = await auth.client
-      .from('household_members')
-      .select('household_id')
-      .limit(1)
-      .maybeSingle();
-    if (!membership) return apiError('HOUSEHOLD_REQUIRED', '참여 중인 household가 필요해요.', 403);
+    // Resolve the target household. An explicit id must belong to the caller;
+    // absent one, fall back to the caller's earliest membership for determinism.
+    let householdId = body.data.householdId;
+    if (householdId) {
+      const { data: membership } = await auth.client
+        .from('household_members')
+        .select('household_id')
+        .eq('household_id', householdId)
+        .eq('user_id', auth.userId)
+        .maybeSingle();
+      if (!membership) return apiError('HOUSEHOLD_FORBIDDEN', '이 household에 접근할 수 없어요.', 403);
+    } else {
+      const { data: membership } = await auth.client
+        .from('household_members')
+        .select('household_id')
+        .eq('user_id', auth.userId)
+        .order('joined_at', { ascending: true })
+        .order('household_id', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (!membership) return apiError('HOUSEHOLD_REQUIRED', '참여 중인 household가 필요해요.', 403);
+      householdId = membership.household_id;
+    }
 
     const [
       inventoryResult,
@@ -57,14 +81,20 @@ export default {
     ] = await Promise.all([
       auth.client.from('inventory_items')
         .select('id, master_id, display_name, quantity_type, quantity, remaining_level, expiration_date')
-        .eq('household_id', membership.household_id).is('deleted_at', null),
-      auth.client.from('recipes').select('*').eq('is_active', true),
-      auth.client.from('recipe_ingredients').select('*'),
-      auth.client.from('ingredient_master').select('id, parent_id'),
+        .eq('household_id', householdId).is('deleted_at', null),
+      auth.client.from('recipes')
+        .select('id, name, image_url, cook_time_min, difficulty, servings, calories_est, steps, tags, required_tools, source')
+        .eq('is_active', true).limit(RECIPE_QUERY_CAP + 1),
+      auth.client.from('recipe_ingredients')
+        .select('recipe_id, master_id, name_text, is_optional').limit(RECIPE_INGREDIENT_QUERY_CAP),
+      auth.client.from('ingredient_master').select('id, parent_id').limit(MASTER_QUERY_CAP),
       auth.client.from('ingredient_substitutions').select('from_master_id, to_master_id, bidirectional'),
       auth.client.from('user_preferences').select('*').eq('user_id', auth.userId).maybeSingle(),
       auth.client.from('favorite_recipes').select('recipe_id').eq('user_id', auth.userId),
     ]);
+    if ((recipesResult.data?.length ?? 0) > RECIPE_QUERY_CAP) {
+      console.warn('recommend-recipes recipe cap hit', { cap: RECIPE_QUERY_CAP });
+    }
     const failure = [
       inventoryResult.error, recipesResult.error, ingredientsResult.error, mastersResult.error,
       substitutionsResult.error, preferencesResult.error, favoritesResult.error,
@@ -76,6 +106,7 @@ export default {
     };
     const disliked = new Set<string>(preferences.disliked_master_ids ?? []);
     const allergies = new Set<string>(preferences.allergy_master_ids ?? []);
+    const hasAllergies = allergies.size > 0;
     const tools = new Set<string>(preferences.owned_tools ?? []);
     const favorites = new Set<string>((favoritesResult.data ?? []).map((item) => item.recipe_id));
     const parents = new Map<string, string | null>((mastersResult.data ?? []).map((item) => [item.id, item.parent_id]));
@@ -100,13 +131,30 @@ export default {
       ingredientsByRecipe.set(ingredient.recipe_id, values);
     }
 
-    const ranked = (recipesResult.data ?? []).flatMap((recipe) => {
+    // Allergen check walks the master hierarchy so a child of a flagged
+    // ingredient is still caught, not just an exact master id match.
+    const isAllergen = (masterId: string | null): boolean => {
+      if (masterId === null) return false;
+      const seen = new Set<string>();
+      let current: string | null = masterId;
+      while (current && !seen.has(current)) {
+        if (allergies.has(current)) return true;
+        seen.add(current);
+        current = parents.get(current) ?? null;
+      }
+      return false;
+    };
+
+    const ranked = (recipesResult.data ?? []).slice(0, RECIPE_QUERY_CAP).flatMap((recipe) => {
       if (!(recipe.required_tools ?? []).every((tool: string) => tools.has(tool))) return [];
       if (body.data.filters?.difficulty && !body.data.filters.difficulty.includes(recipe.difficulty)) return [];
       if (body.data.filters?.maxCookTimeMin && recipe.cook_time_min > body.data.filters.maxCookTimeMin) return [];
 
       const ingredients = ingredientsByRecipe.get(recipe.id) ?? [];
-      if (ingredients.some((item) => disliked.has(item.master_id) || allergies.has(item.master_id))) return [];
+      // An ingredient without a master mapping cannot be allergy-verified; when
+      // allergies are configured, drop the recipe rather than risk a miss.
+      if (hasAllergies && ingredients.some((item) => item.master_id === null)) return [];
+      if (ingredients.some((item) => disliked.has(item.master_id) || isAllergen(item.master_id))) return [];
       const required = ingredients.filter((item) => !item.is_optional);
       const missing: Array<{ masterId: string; name: string }> = [];
       const substitutionMatches: Array<{ requiredName: string; ownedName: string }> = [];

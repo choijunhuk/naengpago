@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, type PressableProps } from 'react-native';
 
+import { useIconColors } from '../../theme/icon-colors';
+
 interface ButtonProps extends PressableProps {
   label: string;
   icon?: ReactNode;
@@ -32,6 +34,7 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const iconColors = useIconColors();
   return (
     <Pressable
       accessibilityRole="button"
@@ -40,7 +43,7 @@ export function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading ? <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : '#16A34A'} /> : icon}
+      {loading ? <ActivityIndicator color={variant === 'primary' ? iconColors.onPrimary : iconColors.primary} /> : icon}
       <Text className={`font-sans text-[15px] font-semibold ${labelClasses[variant]}`}>{label}</Text>
     </Pressable>
   );

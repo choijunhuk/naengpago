@@ -2,6 +2,7 @@ import { Minus, Plus } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
 import { levelLabel } from '../../domain/inventory';
+import { useIconColors } from '../../theme/icon-colors';
 import type { QuantityType, RemainingLevel } from '../../types/domain';
 
 const levels: RemainingLevel[] = ['FULL', 'HIGH', 'MEDIUM', 'LOW', 'ALMOST_EMPTY'];
@@ -23,6 +24,7 @@ export function QuantityEditor({
   onQuantityChange,
   onLevelChange,
 }: QuantityEditorProps) {
+  const iconColors = useIconColors();
   if (quantityType === 'LEVEL') {
     return (
       <View className="gap-2">
@@ -54,7 +56,7 @@ export function QuantityEditor({
           onPress={() => onQuantityChange(Math.max(0, (quantity ?? 0) - step))}
           accessibilityLabel="수량 줄이기"
         >
-          <Minus color="#78716C" size={20} strokeWidth={1.5} />
+          <Minus color={iconColors.muted} size={20} strokeWidth={1.5} />
         </Pressable>
         <Text className="min-w-16 text-center font-sans text-[15px] font-semibold text-ink-light dark:text-ink-dark">
           {quantity ?? 0}{unit ? ` ${unit}` : ''}
@@ -64,7 +66,7 @@ export function QuantityEditor({
           onPress={() => onQuantityChange((quantity ?? 0) + step)}
           accessibilityLabel="수량 늘리기"
         >
-          <Plus color="#16A34A" size={20} strokeWidth={1.5} />
+          <Plus color={iconColors.primary} size={20} strokeWidth={1.5} />
         </Pressable>
       </View>
     </View>
