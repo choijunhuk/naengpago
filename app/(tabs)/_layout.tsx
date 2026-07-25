@@ -1,19 +1,23 @@
 import { Redirect, Tabs } from 'expo-router';
 import { ChefHat, House, ListChecks, Settings, ShoppingBasket } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 import { useAppStore } from '../../src/stores/app-store';
+import { themeTokens } from '../../src/theme/tokens';
 
 export default function TabsLayout() {
   const session = useAppStore((state) => state.session);
+  const { colorScheme } = useColorScheme();
+  const palette = themeTokens.colors[colorScheme === 'dark' ? 'dark' : 'light'];
   if (!session) return <Redirect href="/(auth)/login" />;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#16A34A',
-        tabBarInactiveTintColor: '#78716C',
-        tabBarStyle: { minHeight: 64, paddingBottom: 8, paddingTop: 6, borderTopColor: '#E7E5E4' },
+        tabBarActiveTintColor: palette.primary,
+        tabBarInactiveTintColor: palette.textMuted,
+        tabBarStyle: { minHeight: 64, paddingBottom: 8, paddingTop: 6, borderTopColor: palette.border, backgroundColor: palette.surface },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >

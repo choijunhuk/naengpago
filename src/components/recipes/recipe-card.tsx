@@ -4,10 +4,12 @@ import { Clock3 } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
 import type { RankedRecipe } from '../../domain/recommendation';
+import { useIconColors } from '../../theme/icon-colors';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 
 export function RecipeCard({ entry }: { entry: RankedRecipe }) {
+  const iconColors = useIconColors();
   return (
     <Link href={`/recipes/${entry.recipe.id}`} asChild>
       <Pressable accessibilityLabel={`${entry.recipe.name}, 보유 ${entry.ownedCount}/${entry.requiredCount}`}>
@@ -19,7 +21,7 @@ export function RecipeCard({ entry }: { entry: RankedRecipe }) {
               <Badge label={`보유 ${entry.ownedCount}/${entry.requiredCount}`} tone={entry.missing.length === 0 ? 'success' : 'neutral'} />
             </View>
             <View className="flex-row flex-wrap items-center gap-2">
-              <Clock3 color="#78716C" size={20} strokeWidth={1.5} />
+              <Clock3 color={iconColors.muted} size={20} strokeWidth={1.5} />
               <Text className="font-sans text-sm text-muted-light dark:text-muted-dark">{entry.recipe.cookTimeMin}분 · {entry.recipe.difficulty === 'EASY' ? '쉬움' : '보통'}</Text>
               {entry.expiringIngredientNames.length ? <Badge label="임박 재료 사용" tone="danger" /> : null}
             </View>

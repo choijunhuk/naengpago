@@ -88,6 +88,14 @@ export interface ReviewCandidate extends AnalysisCandidateInput {
   duplicateAction: DuplicateAction;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  target: string;
+  read: boolean;
+}
+
 export interface ShoppingItem {
   id: string;
   masterId: string | null;

@@ -8,32 +8,29 @@ import { Badge } from '../../src/components/ui/badge';
 import { Button } from '../../src/components/ui/button';
 import { Card } from '../../src/components/ui/card';
 import { SectionHeader } from '../../src/components/ui/section-header';
+import { categoryEmoji } from '../../src/domain/category-emoji';
 import { getDday } from '../../src/domain/inventory';
-import { mockRecipes } from '../../src/domain/mock-data';
-import { rankRecipes } from '../../src/domain/recommendation';
+import { useIconColors } from '../../src/theme/icon-colors';
+import { useInventory } from '../../src/features/data/inventory';
+import { useNotifications } from '../../src/features/data/notifications';
+import { useTopRecommendation } from '../../src/features/data/recipes';
+import { useStorageLocations } from '../../src/features/data/storage';
 import { useAppStore } from '../../src/stores/app-store';
 
 export default function HomeScreen() {
+  const iconColors = useIconColors();
   const session = useAppStore((state) => state.session);
-  const inventory = useAppStore((state) => state.inventory);
-  const storageLocations = useAppStore((state) => state.storageLocations);
-  const likedTags = useAppStore((state) => state.likedTags);
-  const ownedTools = useAppStore((state) => state.ownedTools);
-  const favoriteRecipeIds = useAppStore((state) => state.favoriteRecipeIds);
-  const unreadCount = useAppStore((state) => state.notifications.filter((item) => !item.read).length);
+  const inventory = useInventory().data ?? [];
+  const storageLocations = useStorageLocations().data ?? [];
+  const notifications = useNotifications().data ?? [];
+  const recommendation = useTopRecommendation().data;
+  const unreadCount = notifications.filter((item) => !item.read).length;
   const expiring = [...inventory]
     .filter((item) => {
       const dday = getDday(item.expirationDate);
       return dday !== null && dday <= 3;
     })
     .sort((left, right) => (getDday(left.expirationDate) ?? 999) - (getDday(right.expirationDate) ?? 999));
-  const recommendation = rankRecipes(mockRecipes, inventory, {
-    mode: 'EXPIRING', likedTags, ownedTools, favoriteRecipeIds,
-    dislikedMasterIds: [], allergyMasterIds: [],
-  })[0] ?? rankRecipes(mockRecipes, inventory, {
-    mode: 'NOW', likedTags, ownedTools, favoriteRecipeIds,
-    dislikedMasterIds: [], allergyMasterIds: [],
-  })[0];
 
   return (
     <AppScreen
@@ -41,7 +38,7 @@ export default function HomeScreen() {
       subtitle="임박한 재료부터 가볍게 비워봐요."
       action={(
         <Pressable className="relative h-11 w-11 items-center justify-center rounded-full border border-line-light bg-surface-light dark:border-line-dark dark:bg-surface-dark" onPress={() => router.push('/notifications')} accessibilityLabel={`알림 ${unreadCount}개`}>
-          <Bell color="#1C1917" size={20} strokeWidth={1.5} />
+          <Bell color={iconColors.text} size={20} strokeWidth={1.5} />
           {unreadCount ? <View className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-danger" /> : null}
         </Pressable>
       )}
@@ -53,12 +50,12 @@ export default function HomeScreen() {
             <Text className="font-sans text-xs font-semibold text-primary-light dark:text-primary-dark">오늘 먼저 먹을 선반</Text>
             <Text className="font-sans text-lg font-semibold text-ink-light dark:text-ink-dark">임박 재료 {expiring.length}개</Text>
           </View>
-          <Snowflake color="#16A34A" size={24} strokeWidth={1.5} />
+          <Snowflake color={iconColors.primary} size={24} strokeWidth={1.5} />
         </View>
         <View className="flex-row gap-3 overflow-hidden">
           {expiring.slice(0, 3).map((item) => (
             <Pressable key={item.id} className="min-w-24 flex-1 gap-2 rounded-button bg-app-light p-3 dark:bg-app-dark" onPress={() => router.push(`/inventory/${item.id}`)} accessibilityLabel={`${item.displayName} 상세`}>
-              <Text className="text-2xl">{item.category === 'VEGETABLE' ? '🥒' : '🥣'}</Text>
+              <Text className="text-2xl" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">{categoryEmoji(item.category)}</Text>
               <Text className="font-sans text-sm font-semibold text-ink-light dark:text-ink-dark" numberOfLines={1}>{item.displayName}</Text>
               <ExpiryBadge expirationDate={item.expirationDate} />
             </Pressable>
@@ -76,7 +73,7 @@ export default function HomeScreen() {
                 <Text className="font-sans text-sm font-semibold text-ink-light dark:text-ink-dark">{location.name}</Text>
                 <Text className="font-sans text-2xl font-bold text-ink-light dark:text-ink-dark">{inventory.filter((item) => item.storageLocationId === location.id).length}</Text>
               </View>
-              <ChevronRight color="#78716C" size={20} strokeWidth={1.5} />
+              <ChevronRight color={iconColors.muted} size={20} strokeWidth={1.5} />
             </Pressable>
           ))}
         </View>
@@ -100,7 +97,7 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      <Button label="사진으로 재료 등록" icon={<Camera color="#FFFFFF" size={20} strokeWidth={1.5} />} onPress={() => router.push('/capture')} testID="capture-fab" />
+      <Button label="사진으로 재료 등록" icon={<Camera color={iconColors.onPrimary} size={20} strokeWidth={1.5} />} onPress={() => router.push('/capture')} testID="capture-fab" />
     </AppScreen>
   );
 }

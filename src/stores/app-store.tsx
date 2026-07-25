@@ -12,6 +12,7 @@ import {
 } from '../domain/mock-data';
 import type {
   AnalysisCandidateInput,
+  AppNotification,
   InventoryItem,
   ReviewCandidate,
   ShoppingItem,
@@ -24,14 +25,6 @@ interface SessionUser {
   id: string;
   email: string;
   nickname: string;
-}
-
-interface AppNotification {
-  id: string;
-  title: string;
-  body: string;
-  target: string;
-  read: boolean;
 }
 
 interface AddInventoryInput {
@@ -62,6 +55,7 @@ interface AppStore {
   setHydrated: (hydrated: boolean) => void;
   finishOnboarding: () => void;
   signInDemo: (email: string, nickname?: string) => void;
+  signInLive: (user: SessionUser) => void;
   signOut: () => void;
   setTheme: (theme: AppStore['theme']) => void;
   addInventory: (input: AddInventoryInput) => string;
@@ -106,6 +100,7 @@ export const useAppStore = create<AppStore>()(
       finishOnboarding: () => set({ hasOnboarded: true }),
       signInDemo: (email, nickname = '냉파고 사용자') =>
         set({ session: { id: 'user-demo', email, nickname }, hasOnboarded: true }),
+      signInLive: (user) => set({ session: user, hasOnboarded: true }),
       signOut: () => set({ session: null }),
       setTheme: (theme) => set({ theme }),
       addInventory: (input) => {
@@ -208,10 +203,12 @@ export const useAppStore = create<AppStore>()(
       moveShoppingToInventory: (id, storageLocationId) => {
         const item = get().shoppingItems.find((entry) => entry.id === id);
         if (!item || item.movedToInventory) return;
+        const quantityType: QuantityType =
+          item.unit === 'g' || item.unit === 'ml' ? 'MEASURABLE' : 'COUNTABLE';
         get().addInventory({
           displayName: item.name,
           category: item.category,
-          quantityType: 'COUNTABLE',
+          quantityType,
           quantity: item.quantity ?? 1,
           unit: item.unit,
           remainingLevel: null,
@@ -248,8 +245,6 @@ export const useAppStore = create<AppStore>()(
         theme: state.theme,
         inventory: state.inventory,
         storageLocations: state.storageLocations,
-        reviewAnalysisId: state.reviewAnalysisId,
-        reviewDraft: state.reviewDraft,
         shoppingItems: state.shoppingItems,
         favoriteRecipeIds: state.favoriteRecipeIds,
         notifications: state.notifications,

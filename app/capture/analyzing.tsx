@@ -9,8 +9,10 @@ import { Card } from '../../src/components/ui/card';
 import { uploadAndAnalyzeImage } from '../../src/features/analysis/analysis-service';
 import { appEnv } from '../../src/lib/env';
 import { useAppStore } from '../../src/stores/app-store';
+import { useIconColors } from '../../src/theme/icon-colors';
 
 export default function AnalyzingScreen() {
+  const iconColors = useIconColors();
   const [stage, setStage] = useState<'upload' | 'analyze'>('upload');
   const [error, setError] = useState('');
   const params = useLocalSearchParams<{ imageUri?: string; width?: string; height?: string; storageLocationHint?: string }>();
@@ -38,8 +40,8 @@ export default function AnalyzingScreen() {
   return (
     <AppScreen scroll={false} testID="analyzing-screen">
       <View className="min-h-full justify-center gap-6 py-8">
-        <View className="items-center gap-4"><LoaderCircle color="#16A34A" size={64} strokeWidth={1.5} /><Text className="font-sans text-2xl font-bold text-ink-light dark:text-ink-dark">재료를 찾고 있어요</Text><Text className="text-center font-sans text-[15px] leading-6 text-muted-light dark:text-muted-dark">AI 결과는 바로 저장되지 않아요.{`\n`}잠시 후 직접 확인할 수 있어요.</Text></View>
-        <Card className="gap-4"><View className="flex-row items-center gap-3">{stage === 'upload' ? <LoaderCircle color="#16A34A" size={20} /> : <Check color="#16A34A" size={20} />}<Text className="font-sans text-[15px] text-ink-light dark:text-ink-dark">사진 안전하게 준비</Text></View><View className="flex-row items-center gap-3"><LoaderCircle color={stage === 'analyze' ? '#16A34A' : '#A8A29E'} size={20} /><Text className="font-sans text-[15px] text-ink-light dark:text-ink-dark">재료 이름과 수량 후보 분석</Text></View></Card>
+        <View className="items-center gap-4"><LoaderCircle color={iconColors.primary} size={64} strokeWidth={1.5} /><Text className="font-sans text-2xl font-bold text-ink-light dark:text-ink-dark">재료를 찾고 있어요</Text><Text className="text-center font-sans text-[15px] leading-6 text-muted-light dark:text-muted-dark">AI 결과는 바로 저장되지 않아요.{`\n`}잠시 후 직접 확인할 수 있어요.</Text></View>
+        <Card className="gap-4"><View className="flex-row items-center gap-3">{stage === 'upload' ? <LoaderCircle color={iconColors.primary} size={20} /> : <Check color={iconColors.primary} size={20} />}<Text className="font-sans text-[15px] text-ink-light dark:text-ink-dark">사진 안전하게 준비</Text></View><View className="flex-row items-center gap-3"><LoaderCircle color={stage === 'analyze' ? iconColors.primary : iconColors.muted} size={20} /><Text className="font-sans text-[15px] text-ink-light dark:text-ink-dark">재료 이름과 수량 후보 분석</Text></View></Card>
         <Button label="분석 취소" variant="ghost" onPress={() => router.replace('/capture')} />
       </View>
     </AppScreen>
